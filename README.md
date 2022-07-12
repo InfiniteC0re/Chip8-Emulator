@@ -1,2 +1,2 @@
 # Chip8-Emulator
-Simple Chip8 emulator written in C++ that uses OpenGL to render the virtual screen. CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker.
+Simple Chip8 emulator written in C++ that uses OpenGL to render the virtual screen. CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers. The simplicity of CHIP-8, and its long history and popularity, has ensured that CHIP-8 emulators and programs are still being made to this day.

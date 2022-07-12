@@ -4,7 +4,7 @@ Simple Chip-8 emulator written in C++ that uses OpenGL to render the virtual scr
 CHIP-8 is an interpreted programming language, developed by Joseph Weisbecker. It was initially used on the COSMAC VIP and Telmac 1800 8-bit microcomputers in the mid-1970s. CHIP-8 programs are run on a CHIP-8 virtual machine. It was made to allow video games to be more easily programmed for these computers. The simplicity of CHIP-8, and its long history and popularity, has ensured that CHIP-8 emulators and programs are still being made to this day.
 
 ## Building
-I haven't tested the emulator on any platforms but Windows so I can't gurantee the rendering part it will work on Linux or Mac
+I haven't tested the emulator on any platforms but Windows so I can't gurantee the rendering part will work on Linux or Mac
 
 To build the emulator on Windows simply compile it in Visual Studio and make sure you have `opengl32.lib` on your system
 

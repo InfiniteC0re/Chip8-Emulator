@@ -1,19 +1,17 @@
 #include "stdafx.h"
 
-#include <chrono>
-#include <thread>
-#include <Windows.h>
-
 #include <devices/Chip8.h>
 
 #include <iostream>
+#include <thread>
 #include <mutex>
 
 #define WINDOW_SCALE 8
 
 GLFWwindow* g_window;
+bool g_isRunning = true;
 
-void Chip8Thread(Chip8& chip, std::mutex& chip_mutex, bool& is_running)
+void Chip8Thread(Chip8& chip, std::mutex& chip_mutex)
 {
 	double lastTimerTick = 0;
 	double lastCPUTick = 0;
@@ -21,14 +19,13 @@ void Chip8Thread(Chip8& chip, std::mutex& chip_mutex, bool& is_running)
 	double nextSecond = glfwGetTime() + 1.0;
 	int times = 0;
 
-	while (is_running)
+	while (g_isRunning)
 	{
-		auto tickStartTime = std::chrono::steady_clock::now();
-		
 		double currTime = glfwGetTime();
 		double cpuTickDiff = currTime - lastCPUTick;
 		double timerTickDiff = currTime - lastTimerTick;
 
+		// checking performance
 		if (currTime >= nextSecond)
 		{
 			printf("Current CPU Rate: %d Hz (target clock is %d Hz)\n", times, CPU_HZ);
@@ -56,38 +53,56 @@ void Chip8Thread(Chip8& chip, std::mutex& chip_mutex, bool& is_running)
 			chip.GetCPU().TickTimers();
 			chip_mutex.unlock();
 		}
-
 	}
 }
 
-int main()
+int main(int argc, const char** argv)
 {
-	bool is_running = true;
+	const char* executableFilepath = *(argv++);
+	const char* romFilepath = nullptr;
+	
+	// check arguments
+	if (*argv == nullptr)
+	{
+		std::cout << "Usage: " << executableFilepath << " rom_filepath" << std::endl;
+		std::cout << "Example: " << executableFilepath << " './roms/Chip8 emulator Logo [Garstyciuks].ch8'" << std::endl;
+		return 0;
+	}
+	else
+	{
+		romFilepath = *argv;
+	}
 
-	if (!glfwInit()) return -1;
+	if (!glfwInit())
+	{
+		std::cerr << "glfw: can't initialize" << std::endl;
+		return -1;
+	}
 
 	g_window = glfwCreateWindow(DISPLAY_WIDTH * WINDOW_SCALE, DISPLAY_HEIGHT * WINDOW_SCALE, "Chip 8 Emulator", nullptr, nullptr);
 
 	if (!g_window)
 	{
-		fprintf(stderr, "glfw: can't create window");
+		std::cerr << "glfw: can't create window" << std::endl;
 		glfwTerminate();
 		return -1;
 	}
 
 	glfwMakeContextCurrent(g_window);
-	glfwSwapInterval(1);
-	GLenum glewStatus = glewInit();
 
+	GLenum glewStatus = glewInit();
 	if (glewStatus == GLEW_OK)
 	{
-		fprintf(stdout, "using glew %s\n", glewGetString(GLEW_VERSION));
+		std::cout << "using glew " << glewGetString(GLEW_VERSION) << std::endl;
+
+		// turning VSync on
+		glfwSwapInterval(1);
 
 		Chip8 chip;
-		chip.LoadProgram("roms/Brick (Brix hack, 1990).ch8");
+		chip.LoadProgram(romFilepath);
 
 		std::mutex chip_mutex;
-		std::thread chip_thread(Chip8Thread, std::ref(chip), std::ref(chip_mutex), std::ref(is_running));
+		std::thread chip_thread(Chip8Thread, std::ref(chip), std::ref(chip_mutex));
 
 		while (!glfwWindowShouldClose(g_window))
 		{
@@ -100,7 +115,7 @@ int main()
 			// rendering
 			chip.GetDisplay().Render();
 
-			// should we reset?
+			// reset emulator if needed
 			if (glfwGetKey(g_window, GLFW_KEY_ENTER) == GLFW_PRESS) { chip.Reset(true); }
 
 			chip_mutex.unlock();
@@ -110,12 +125,12 @@ int main()
 		}
 
 		// waiting for the Chip8 thread to finish
-		is_running = false;
+		g_isRunning = false;
 		chip_thread.join();
 	}
 	else
 	{
-		fprintf(stderr, "glew: error: %s\n", glewGetErrorString(glewStatus));
+		std::cerr << "glew: error: " << glewGetErrorString(glewStatus) << std::endl;
 	}
 
 	glfwTerminate();
